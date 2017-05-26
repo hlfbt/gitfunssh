@@ -1,3 +1,13 @@
+#!/bin/bash
+#
+# .gitfuns.sh
+#
+# Contains helpful shell functions and aliases for git
+# Source this script in your shells rc file
+#
+# Author: Alexander Schulz (alex@nope.bz)
+
+
 function gitlog {
   local STATS=1
   local AUTHOR_LENGTH=16
