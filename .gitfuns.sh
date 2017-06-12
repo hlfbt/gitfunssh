@@ -26,6 +26,10 @@ function gitlog {
   fi
 }
 
+function _git_get_refs {
+  git show-ref | sed -n '/^.*refs\/[^\/]\+\// { s/^.*refs\/[^\/]\+\///; p; }'
+}
+
 function _git_getbranch {
   git rev-parse --abbrev-ref HEAD
 }
@@ -133,3 +137,15 @@ HELPMSGEOF
     echo -e "\x1b[33mYour working state has been \x1b[1mSTASHED\x1b[21m. Use '\x1b[1mgit stash pop\x1b[21m' to unstash it!\x1b[0m"
   fi
 }
+
+function _git_refs_complete {
+  local cur
+
+  cur="${COMP_WORDS[COMP_CWORD]}"
+  COMPREPLY=( $(_git_get_refs | grep "^$cur" 2>/dev/null) )
+
+  return 0
+}
+
+complete -F _git_refs_complete gitlog
+complete -F _git_refs_complete gitmerge
