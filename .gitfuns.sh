@@ -15,25 +15,29 @@ function gitlog {
   local MESSAGE_LENGTH=80
   local MESSAGE_FORMAT="%<(${MESSAGE_LENGTH},trunc)%s"
 
-  local from to
+  local from to dots
   [ -n "$1" ] && from="$1" || from="origin/$(_git_getbranch)"
-  [ -n "$2" ] && to="$2"   || to=''
+  [ -n "$2" ] && to="$2"   || to=""
+  dots=".."
 
   if grep -q "^.\+\.\..\+$" <<< "$1"; then
     if [ -z "$2" ]; then
       from="$(sed 's/\.\..*//' <<< "$1")"
       to="$(sed 's/.*\.\.//' <<< "$1")"
     fi
-  elif grep -q "^[0-9]\+$" <<< "$1"; then
+  elif [ "x$1" = "xall" ]; then
+    from="$(git rev-list --max-parents=0 HEAD)"
+  elif grep -q "^-\?[0-9]\+$" <<< "$1"; then
     if [ -z "$2" ]; then
-      from="HEAD~$1"
+      from="-${1#-}"
+      dots=""
     fi
   fi
 
   if [ $STATS -eq 1 ]; then
-    git --no-pager log --color=always --pretty=format:" %x1b[95m%ad%x1b[0m %x1b[33m%h%x1b[0m %x1b[36m${AUTHOR_FORMAT}%x1b[0m  ${MESSAGE_FORMAT}" --shortstat --date=short "${from}..${to}" | perl -0777 -pe 's/\n ([0-9]+ files? changed.+)\n+/   \x1b[2m\1\x1b[0m\n/gm; s/([0-9]+) file(s?) changed/\1 file\2/g; s/([0-9]+) insertions?\(\+\)/\x1b[32m+\1\x1b[39m/g; s/([0-9]+) deletions?\(-\)/\x1b[31m-\1\x1b[39m/g'
+    git --no-pager log --color=always --pretty=format:" %x1b[95m%ad%x1b[0m %x1b[33m%h%x1b[0m %x1b[36m${AUTHOR_FORMAT}%x1b[0m  ${MESSAGE_FORMAT}" --shortstat --date=short "${from}${dots}${to}" | perl -0777 -pe 's/\n ([0-9]+ files? changed.+)\n+/   \x1b[2m\1\x1b[0m\n/gm; s/([0-9]+) file(s?) changed/\1 file\2/g; s/([0-9]+) insertions?\(\+\)/\x1b[32m+\1\x1b[39m/g; s/([0-9]+) deletions?\(-\)/\x1b[31m-\1\x1b[39m/g'
   else
-    git --no-pager log --color=always --pretty=format:" %x1b[95m%ad%x1b[0m %x1b[33m%h%x1b[0m %x1b[36m${AUTHOR_FORMAT}%x1b[0m  ${MESSAGE_FORMAT}" --date=short "${from}..${to}"
+    git --no-pager log --color=always --pretty=format:" %x1b[95m%ad%x1b[0m %x1b[33m%h%x1b[0m %x1b[36m${AUTHOR_FORMAT}%x1b[0m  ${MESSAGE_FORMAT}" --date=short "${from}${dots}${to}"
   fi
 }
 
@@ -57,7 +61,7 @@ function gitmerge {
   mergebranch="master"
   uncommitted_changes=$(git diff-index --quiet HEAD -- && echo 0 || echo 1)
 
-  read -r -d '' HELPMSG <<HELPMSGEOF
+  read -r -d "" HELPMSG <<HELPMSGEOF
 Usage: $funname [-h] [-d] [-r] [<branch>]
 
 Shell options:
@@ -72,7 +76,7 @@ HELPMSGEOF
   while [ -n "$1" ]; do
     case "$1" in
       -d) delete_old=1;;
-      -r) GITMERGE='rebase';;
+      -r) GITMERGE="rebase";;
       -h) echo "$HELPMSG"; return 0 2>&1 > /dev/null || exit 0;;
       *)  mergebranch="$1";;
     esac
