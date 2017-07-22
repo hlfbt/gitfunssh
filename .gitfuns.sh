@@ -24,6 +24,10 @@ function gitlog {
       from="$(sed 's/\.\..*//' <<< "$1")"
       to="$(sed 's/.*\.\.//' <<< "$1")"
     fi
+  elif grep -q "^[0-9]\+$" <<< "$1"; then
+    if [ -z "$2" ]; then
+      from="HEAD~$1"
+    fi
   fi
 
   if [ $STATS -eq 1 ]; then
