@@ -138,10 +138,18 @@ HELPMSGEOF
 
     # Change to mergebranch and delete old branch if -d was specified
     if [ $delete_old -eq 1 ]; then
-      if git checkout "$mergebranch" > /dev/null && git branch -d "$curbranch" > /dev/null && git push origin -d "$curbranch" > /dev/null; then
-        echo -e "\x1b[32mChanged to $mergebranch and deleted branch $curbranch.\x1b[0m"
+      echo
+      echo -n "\x1b[1mReally\x1b[0m delete branch $curbranch? [Y/n] "
+      read yesno
+      if [[ " $yesno" =~ ^\ [n|N][o|O]?$ ]]; then
+        echo "$curbranch not deleted."
+        git checkout "$curbranch" > /dev/null
       else
-        echo -e "\x1b[1m\x1b[31mError deleting branch ${curbranch}.\x1b[0m"
+        if git checkout "$mergebranch" > /dev/null && git branch -d "$curbranch" > /dev/null && git push origin -d "$curbranch" > /dev/null; then
+          echo -e "\x1b[32mChanged to $mergebranch and deleted branch $curbranch.\x1b[0m"
+        else
+          echo -e "\x1b[1m\x1b[31mError deleting branch ${curbranch}.\x1b[0m"
+        fi
       fi
     else
       git checkout "$curbranch" > /dev/null
