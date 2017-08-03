@@ -139,7 +139,7 @@ HELPMSGEOF
     # Change to mergebranch and delete old branch if -d was specified
     if [ $delete_old -eq 1 ]; then
       echo
-      echo -n "\x1b[1mReally\x1b[0m delete branch $curbranch? [Y/n] "
+      echo -en "\x1b[1mReally\x1b[0m delete branch $curbranch? [Y/n] "
       read yesno
       if [[ " $yesno" =~ ^\ [n|N][o|O]?$ ]]; then
         echo "$curbranch not deleted."
